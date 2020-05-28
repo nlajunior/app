@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from alembic.util import msg
-from flask import Flask, request, redirect, render_template, Response, json
+from flask import Flask, request, redirect, render_template, Response, json, abort
 # config import
 from config import app_config, app_active
 
@@ -14,6 +14,7 @@ from controller.Product import ProductController
 config = app_config[app_active]
 
 from flask_sqlalchemy import SQLAlchemy
+from functools import wraps
 
 
 def create_app(config_name):
@@ -40,6 +41,21 @@ def create_app(config_name):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
         response.headers.add('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS')
         return response
+
+    def auth_token_required(f):
+        @wraps(f)
+        def verify_token(*args, **kwargs):
+            user = UserController()
+            try:
+                result = user.verify_auth_token(request.headers['access_token'])
+                if result['status'] == 200:
+                    return f(*args, **kwargs)
+                else:
+                    abort(result['status'], result['message'])
+            except KeyError as e:
+                abort(401, 'Você precisa enviar um token de acesso')
+
+        return verify_token
 
     @app.route('/')
     def index():
@@ -100,9 +116,11 @@ def create_app(config_name):
 
     @app.route('/products/', methods=['GET'])
     @app.route('/products/<limit>', methods=['GET'])
+    @auth_token_required
     def get_products(limit=None):
         header = {
-
+            'access_token': request.headers['access_token'],
+            "token_type": "JWT"
         }
 
         product = ProductController()
@@ -111,12 +129,23 @@ def create_app(config_name):
             'status'], header
 
     @app.route('/product/<product_id>', methods=['GET'])
+    @auth_token_required
     def get_product(product_id):
-        header = {}
+        header = {
+            'access_token': request.headers['access_token'],
+            "token_type": "JWT"
+        }
 
         product = ProductController()
         response = product.get_product_by_id(product_id=product_id)
         return Response(json.dumps(response, ensure_ascii=False), mimetype='application/json'), response[
             'status'], header
+
+    @app.route('/user/<user_id>', methods=['GET'])
+    def get_user_profile(user_id):
+        header = {}
+        user = UserController()
+        response = user.get_user_by_id(user_id=user_id)
+        return Response(json.dumps(response, ensure_ascii=False), mimetype='application/json'), response['status'], header
 
     return app

@@ -1,5 +1,11 @@
 from model.User import User
 
+from datetime import datetime, timedelta
+import hashlib, base64, json, jwt
+from config import app_config, app_active
+
+config = app_config[app_active]
+
 
 class UserController():
     def __init__(self):
@@ -45,3 +51,32 @@ class UserController():
                 'result': result,
                 'status': status
             }
+
+    def verify_auth_token(self, access_token):
+        status = 401
+        try:
+            jwt.decode(access_token, config.SECRET, algorithm='H256')
+            message = 'Token inválido'
+            status = 200
+        except jwt.ExpiredSignatureError:
+            message = 'Token expirado, realize um novo login'
+        except:
+            message = 'Token inválido'
+        return {
+            'message': message,
+            'status': status
+        }
+
+    def generate_auth_token(self, data, exp=30, time_exp=False):
+        if time_exp == True:
+            date_time = data['exp']
+        else:
+            date_time = datetime.utcnow() + timedelta(minutes=exp)
+        dict_jwt = {
+            'id': data['id'],
+            'username': data['username'],
+            "exp": date_time
+        }
+        access_token = jwt.encode(dict_jwt, config.SECRET, algorithm='HS256')
+
+        return access_token

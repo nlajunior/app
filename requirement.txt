@@ -1,7 +1,0 @@
-flask
-mysqlclient
-flask-mysqldb
-flask-sqlalchemy
-flask-migrate
-flask-script
-flask-bootstrap

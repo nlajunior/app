@@ -1,0 +1,10 @@
+flask
+mysqlclient
+flask-mysqldb
+flask_admin
+passlib[bcryp]
+flask-sqlalchemy
+Flask-Migrate
+Flask-Script
+flask-bootstrap
+pyjwt
