@@ -1,0 +1,3 @@
+# Instalação no Ubuntu
+sudo apt-get install libmysqlclient-dev
+pip3 install mysqlclient
