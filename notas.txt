@@ -1,3 +1,18 @@
 # Instalação no Ubuntu
+
 sudo apt-get install libmysqlclient-dev
 pip3 install mysqlclient
+
+Configurações no MAC OS
+
+brew unlink mysql
+
+brew link --overwrite mysql-connector-c
+
+echo 'export PATH="/usr/local/opt/mysql-client/bin:$PATH"' >> /Users/nlajunior/.bash_profile
+
+pip install mysqlclient
+
+brew unlink mysql-connector-c
+
+brew link --overwrite mysql

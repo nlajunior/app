@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+
 from alembic.util import msg
-from flask import Flask, request, redirect, render_template, Response, json, abort
+from flask import Flask, request, redirect, render_template, Response, json, abort,session
 # config import
 from config import app_config, app_active
 
@@ -16,9 +17,14 @@ config = app_config[app_active]
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 
+from flask_login import LoginManager, login_user, logout_user
+
 
 def create_app(config_name):
     app = Flask(__name__, template_folder='templates')
+
+    login_manager = LoginManager()
+    login_manager.init_app(app)
 
     app.secret_key = config.SECRET
     app.config.from_object(app_config[config_name])
@@ -32,6 +38,7 @@ def create_app(config_name):
     start_views(app, db)
 
     Bootstrap(app)
+
 
     db.init_app(app)
 
@@ -58,12 +65,9 @@ def create_app(config_name):
         return verify_token
 
     @app.route('/')
-    def index():
-        return 'Hello World!'
-
     @app.route('/login/')
     def login():
-        return render_template('login.html', message='Essa mensagem veio da rota')
+        return render_template('login.html', data={'status':200, 'msg':None, 'type':None})
 
     @app.route('/login/', methods=['POST'])
     def login_post():
@@ -73,10 +77,14 @@ def create_app(config_name):
         password = request.form['password']
         result = user.login(email, password)
         if result:
-            return redirect('/admin')
+            if result.role == 4:
+                return render_template('login.html', data = {'status': 401, 'msg':'Seu usuário não possui acesso ao admin', 'type':2})
+            else:
+                login_user(result)
+                return redirect('/admin')
         else:
             return render_template('login.html', data={'status': 401,
-                                                       'msg': 'Dados de usuário incorretos', 'type': None})
+                                                       'msg': 'Dados de usuário incorretos', 'type':1})
 
     @app.route('/recovery-password/')
     def recovery_password():
@@ -146,23 +154,24 @@ def create_app(config_name):
     def get_user_profile(user_id):
         header = {
             'access_token': request.headers['access_token'],
-            'token_type':'JWT'
+            'token_type': 'JWT'
         }
         user = UserController()
         response = user.get_user_by_id(user_id=user_id)
-        return Response(json.dumps(response, ensure_ascii=False), mimetype='application/json'), response['status'], header
+        return Response(json.dumps(response, ensure_ascii=False), mimetype='application/json'), response[
+            'status'], header
 
     @app.route('/login_api/', methods=['POST'])
     def login_api():
         header = {}
         user = UserController()
 
-        email=request.json['email']
-        password=request.json['password']
+        email = request.json['email']
+        password = request.json['password']
 
         result = user.login(email, password)
         code = 401
-        response = {"message": "Usuário não autorizado", "result":[]}
+        response = {"message": "Usuário não autorizado", "result": []}
 
         if result:
             if result.active:
@@ -184,5 +193,14 @@ def create_app(config_name):
         return Response(json.dumps(response, ensure_ascii=False), mimetype='application/json'), response[
             'status'], header
 
+    @app.route('/logout')
+    def logout_send():
+        logout_user()
+        return render_template('login.html', data={'status':200, 'msg':'Usuário deslogado com sucesso!', 'type':3})
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        user = UserController()
+        return user.get_admin_login(user_id)
+        
     return app

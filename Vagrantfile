@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
       mysql.vm.synced_folder ".", "/vagrant", disabled: true
       
       mysql.vm.provision "shell",
-         inline: "cat /configs/id_rsa.pub >> .ssh/authorized_keys"
+         inline: "cat /configs/id_rsa.pub >> .ssh/authorized_key:s"
 
       mysql.vm.provision "shell",
         inline: "cat /configs/mysqld.cnf > /etc/mysql/mysql.conf.d/mysqld.cnf"
@@ -40,11 +40,11 @@ Vagrant.configure("2") do |config|
 
     end
 
-      config.vm.define "dime" do |dime|
-        dime.vm.network "forwarded_port", guest: 8080, host: 8080
-        dime.vm.provision "shell", inline: $script_dime
-        dime.vm.synced_folder ".", "/dime"
-        dime.vm.synced_folder ".", "/vagrant", disabled: true
+      config.vm.define "app" do |app|
+        app.vm.network "public_network", ip: "192.168.0.152"
+        #dime.vm.provision "shell", inline: $script_app
+        app.vm.synced_folder ".", "/app"
+        app.vm.synced_folder ".", "/vagrant", disabled: true
       end
 
 

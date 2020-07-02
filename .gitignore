@@ -1,2 +1,17 @@
 ven/
 .vagrant
+.idea/
+.vscode/
+__pycache__/
+admin/__pycache__/Admin.cpython-37.pyc
+admin/__pycache__/Views.cpython-37.pyc
+app.pyc
+controller/__pycache__/Product.cpython-37.pyc
+controller/__pycache__/User.cpython-37.pyc
+migrations/
+model/__pycache__/Category.cpython-37.pyc
+model/__pycache__/Product.cpython-37.pyc
+model/__pycache__/Role.cpython-37.pyc
+model/__pycache__/User.cpython-37.pyc
+ubuntu-bionic-18.04-cloudimg-console.log
+venv/
